@@ -2,35 +2,40 @@
 
 namespace App\Entity;
 
-use Symfony\Component\Validator\Constraints as Assert;
+use App\Repository\TaskRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Ramsey\Uuid\Uuid;
 
-/**
- * @ORM\Entity
- */
+#[ORM\Entity(repositoryClass: TaskRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Task
 {
-    /**
-     * @ORM\Id()
-     * @ORM\GeneratedValue()
-     * @ORM\Column(type="integer")
-     */
-    private $id;
+    #[ORM\Id]
+    #[ORM\Column(type: "guid", unique: true)]
+    private ?Uuid $id = null;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     * @Assert\NotBlank()
-     * @Assert\Length(min=3, max=255)
-     */
-    private $name;
+    #[ORM\Column(length: 255)]
+    private ?string $name = null;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Project", inversedBy="tasks")
-     * @ORM\JoinColumn(name="project_id", referencedColumnName="id", onDelete="CASCADE")
-     */
-    private $project;
+    #[ORM\Column(type: "text")]
+    private ?string $description = null;
 
-    public function getId(): ?int
+    #[ORM\Column(type: 'datetime')]
+    private ?\DateTimeInterface $createdAt = null;
+
+    #[ORM\Column(type: 'datetime')]
+    private ?\DateTimeInterface $updatedAt = null;
+
+    #[ORM\ManyToOne(inversedBy: 'tasks')]
+    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?Project $project = null;
+
+    public function __construct()
+    {
+        $this->id = Uuid::uuid4();
+    }
+
+    public function getId(): ?Uuid
     {
         return $this->id;
     }
@@ -40,10 +45,9 @@ class Task
         return $this->name;
     }
 
-    public function setName(string $name): self
+    public function setName(string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -55,7 +59,6 @@ class Task
     public function setDescription(string $description): static
     {
         $this->description = $description;
-
         return $this;
     }
 
@@ -67,7 +70,6 @@ class Task
     public function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
-
         return $this;
     }
 
@@ -79,20 +81,30 @@ class Task
     public function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
-
         return $this;
     }
 
+    #[ORM\PrePersist]
+    public function prePersist(): void
+    {
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
+    }
+
+    #[ORM\PreFlush]
+    public function preFlush(): void
+    {
+        $this->updatedAt = new \DateTime();
+    }
 
     public function getProject(): ?Project
     {
         return $this->project;
     }
 
-    public function setProject(?Project $project): self
+    public function setProject(?Project $project): static
     {
         $this->project = $project;
-
         return $this;
     }
 }

@@ -2,42 +2,39 @@
 
 namespace App\Entity;
 
+use App\Repository\ProjectGroupRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
+use Ramsey\Uuid\Uuid;
 
-/**
- * @ORM\Entity
- */
+#[ORM\Entity(repositoryClass: ProjectGroupRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class ProjectGroup
 {
-    /**
-     * @ORM\Id()
-     * @ORM\GeneratedValue()
-     * @ORM\Column(type="integer")
-     */
-    private $id;
+    #[ORM\Id]
+    #[ORM\Column(type: "guid", unique: true)]
+    private ?Uuid $id = null;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     * @Assert\NotBlank()
-     * @Assert\Length(min=3, max=255)
-     */
-    private $name;
+    #[ORM\Column(length: 255)]
+    private ?string $name = null;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Project", mappedBy="projectGroup", cascade={"remove"})
-     */
-    private $projects;
+    #[ORM\Column(type: 'datetime')]
+    private ?\DateTimeInterface $createdAt = null;
+
+    #[ORM\Column(type: 'datetime')]
+    private ?\DateTimeInterface $updatedAt = null;
+
+    #[ORM\OneToMany(mappedBy: 'projectGroup', targetEntity: Project::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $projects;
 
     public function __construct()
     {
+        $this->id = Uuid::uuid4();
         $this->projects = new ArrayCollection();
     }
 
-
-    public function getId(): ?int
+    public function getId(): ?Uuid
     {
         return $this->id;
     }
@@ -50,7 +47,6 @@ class ProjectGroup
     public function setName(string $name): self
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -62,7 +58,6 @@ class ProjectGroup
     public function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
-
         return $this;
     }
 
@@ -74,10 +69,8 @@ class ProjectGroup
     public function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
-
         return $this;
     }
-
 
     /**
      * @return Collection|Project[]
@@ -104,5 +97,18 @@ class ProjectGroup
             }
         }
         return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function prePersist(): void
+    {
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
+    }
+
+    #[ORM\PreFlush]
+    public function preFlush(): void
+    {
+        $this->updatedAt = new \DateTime();
     }
 }

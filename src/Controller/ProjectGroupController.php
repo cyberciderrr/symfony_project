@@ -6,30 +6,31 @@ use App\Entity\ProjectGroup;
 use App\Form\ProjectGroupType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\SerializerInterface as SymfonySerializerInterface;
 
+#[Route('/api/project_groups')]
 class ProjectGroupController extends AbstractController
 {
+    private SymfonySerializerInterface $serializer;
 
-    private $serializer;
-    public function __construct(SerializerInterface $serializer, private EntityManagerInterface $entityManager, private ValidatorInterface $validator)
+    public function __construct(SymfonySerializerInterface $serializer, private EntityManagerInterface $entityManager, private ValidatorInterface $validator)
     {
         $this->serializer = $serializer;
     }
 
-
-
-
     #[Route('', methods: ['POST'])]
-        public function create(Request $request): JsonResponse
+    public function create(Request $request): JsonResponse
     {
         $projectGroup = new ProjectGroup();
         $form = $this->createForm(ProjectGroupType::class, $projectGroup);
         $form->handleRequest($request);
 
-        if($form->isSubmitted() && $form->isValid()){
+        if ($form->isSubmitted() && $form->isValid()) {
             $this->entityManager->persist($projectGroup);
             $this->entityManager->flush();
             return $this->json(['data' => $projectGroup], Response::HTTP_CREATED);
@@ -47,16 +48,35 @@ class ProjectGroupController extends AbstractController
         return $this->json(['data' => $errors], Response::HTTP_BAD_REQUEST);
     }
 
-
-         #[Route('', methods: ['GET'])]
-        public function list(): JsonResponse
-        {
-            $projectGroups = $this->entityManager->getRepository(ProjectGroup::class)->findAll();
-            return $this->json(['data' => $projectGroups]);
+    #[Route('', methods: ['GET'])]
+    public function list(): JsonResponse
+    {
+        $projectGroups = $this->entityManager->getRepository(ProjectGroup::class)->findAll();
+        $data = [];
+        foreach ($projectGroups as $group) {
+            $data[] = [
+                'id' => $group->getId(),
+                'name' => $group->getName(),
+                'projects' => array_map(function ($project) {
+                    return [
+                        'id' => $project->getId(),
+                        'name' => $project->getName(),
+                        'tasks' => array_map(function ($task) {
+                            return [
+                                'id' => $task->getId(),
+                                'name' => $task->getName(),
+                                'description' => $task->getDescription(),
+                            ];
+                        }, $project->getTasks()->toArray())
+                    ];
+                }, $group->getProjects()->toArray())
+            ];
         }
+        return $this->json(['data' => $data]);
+    }
 
-       #[Route('/{id}', methods: ['GET'])]
-        public function get(int $id): JsonResponse
+    #[Route('/{id}', methods: ['GET'])]
+    public function get(int $id): JsonResponse
     {
         $projectGroup = $this->entityManager->getRepository(ProjectGroup::class)->find($id);
 
@@ -64,12 +84,30 @@ class ProjectGroupController extends AbstractController
             return $this->json(['message' => 'Project group not found'], Response::HTTP_NOT_FOUND);
         }
 
-        return $this->json(['data' => $projectGroup]);
+        $projects = $projectGroup->getProjects()->toArray();
+
+        $data = [
+            'id' => $projectGroup->getId(),
+            'name' => $projectGroup->getName(),
+            'projects' => array_map(function ($project) {
+                return [
+                    'id' => $project->getId(),
+                    'name' => $project->getName(),
+                    'tasks' => array_map(function ($task) {
+                        return [
+                            'id' => $task->getId(),
+                            'name' => $task->getName(),
+                            'description' => $task->getDescription(),
+                        ];
+                    }, $project->getTasks()->toArray())
+                ];
+            }, $projects)
+        ];
+        return $this->json(['data' => $data]);
     }
 
-
-         #[Route('/{id}', methods: ['PATCH'])]
-        public function update(Request $request, int $id): JsonResponse
+    #[Route('/{id}', methods: ['PATCH'])]
+    public function update(Request $request, int $id): JsonResponse
     {
         $projectGroup = $this->entityManager->getRepository(ProjectGroup::class)->find($id);
 
@@ -79,7 +117,7 @@ class ProjectGroupController extends AbstractController
 
         $form = $this->createForm(ProjectGroupType::class, $projectGroup);
         $form->handleRequest($request);
-        if($form->isSubmitted() && $form->isValid()){
+        if ($form->isSubmitted() && $form->isValid()) {
             $this->entityManager->flush();
             return $this->json(['data' => $projectGroup]);
         }
@@ -94,8 +132,8 @@ class ProjectGroupController extends AbstractController
         return $this->json(['data' => $errors], Response::HTTP_BAD_REQUEST);
     }
 
-        #[Route('/{id}', methods: ['DELETE'])]
-        public function delete(int $id): JsonResponse
+    #[Route('/{id}', methods: ['DELETE'])]
+    public function delete(int $id): JsonResponse
     {
         $projectGroup = $this->entityManager->getRepository(ProjectGroup::class)->find($id);
 
