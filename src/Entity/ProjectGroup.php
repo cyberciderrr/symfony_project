@@ -44,7 +44,7 @@ class ProjectGroup
         return $this->name;
     }
 
-    public function setName(string $name): self
+    public function setName(string $name): static
     {
         $this->name = $name;
         return $this;
@@ -80,7 +80,7 @@ class ProjectGroup
         return $this->projects;
     }
 
-    public function addProject(Project $project): self
+    public function addProject(Project $project): static
     {
         if (!$this->projects->contains($project)) {
             $this->projects[] = $project;
@@ -89,7 +89,7 @@ class ProjectGroup
         return $this;
     }
 
-    public function removeProject(Project $project): self
+    public function removeProject(Project $project): static
     {
         if ($this->projects->removeElement($project)) {
             if ($project->getProjectGroup() === $this) {

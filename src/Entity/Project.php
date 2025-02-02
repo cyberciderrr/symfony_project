@@ -48,7 +48,7 @@ class Project
         return $this->name;
     }
 
-    public function setName(string $name): self
+    public function setName(string $name): static
     {
         $this->name = $name;
         return $this;
@@ -81,7 +81,7 @@ class Project
         return $this->projectGroup;
     }
 
-    public function setProjectGroup(?ProjectGroup $projectGroup): self
+    public function setProjectGroup(?ProjectGroup $projectGroup): static
     {
         $this->projectGroup = $projectGroup;
         return $this;
@@ -95,7 +95,7 @@ class Project
         return $this->tasks;
     }
 
-    public function addTask(Task $task): self
+    public function addTask(Task $task): static
     {
         if (!$this->tasks->contains($task)) {
             $this->tasks[] = $task;
@@ -104,7 +104,7 @@ class Project
         return $this;
     }
 
-    public function removeTask(Task $task): self
+    public function removeTask(Task $task): static
     {
         if ($this->tasks->removeElement($task)) {
             if ($task->getProject() === $this) {
