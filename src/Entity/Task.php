@@ -2,48 +2,45 @@
 
 namespace App\Entity;
 
-use App\Repository\TaskRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
-use Ramsey\Uuid\Uuid;
 
-#[ORM\Entity(repositoryClass: TaskRepository::class)]
-#[ORM\HasLifecycleCallbacks]
+/**
+ * @ORM\Entity
+ */
 class Task
 {
-    #[ORM\Id]
-    #[ORM\Column(type: "guid", unique: true)]
-    private ?Uuid $id = null;
+    /**
+     * @ORM\Id()
+     * @ORM\GeneratedValue()
+     * @ORM\Column(type="integer")
+     */
+    private $id;
 
-    #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank()
+     * @Assert\Length(min=3, max=255)
+     */
+    private $name;
 
-    #[ORM\Column(type: "text")]
-    private ?string $description = null;
+    /**
+     * @ORM\ManyToOne(targetEntity="Project", inversedBy="tasks")
+     * @ORM\JoinColumn(name="project_id", referencedColumnName="id", onDelete="CASCADE")
+     */
+    private $project;
 
-    #[ORM\Column(type: 'datetime')]
-    private ?\DateTimeInterface $createdAt = null;
-
-    #[ORM\Column(type: 'datetime')]
-    private ?\DateTimeInterface $updatedAt = null;
-
-    public function __construct()
-    {
-        $this->id = Uuid::uuid4();
-    }
-
-
-    public function getId(): ?Uuid
+    public function getId(): ?int
     {
         return $this->id;
     }
-
 
     public function getName(): ?string
     {
         return $this->name;
     }
 
-    public function setName(string $name): static
+    public function setName(string $name): self
     {
         $this->name = $name;
 
@@ -86,16 +83,16 @@ class Task
         return $this;
     }
 
-    #[ORM\PrePersist]
-    public function prePersist(): void
+
+    public function getProject(): ?Project
     {
-        $this->createdAt = new \DateTime();
-        $this->updatedAt = new \DateTime();
+        return $this->project;
     }
 
-    #[ORM\PreFlush]
-    public function preFlush(): void
+    public function setProject(?Project $project): self
     {
-        $this->updatedAt = new \DateTime();
+        $this->project = $project;
+
+        return $this;
     }
 }

@@ -2,44 +2,52 @@
 
 namespace App\Entity;
 
-use App\Repository\ProjectGroupRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
-use Ramsey\Uuid\Uuid;
 
-#[ORM\Entity(repositoryClass: ProjectGroupRepository::class)]
-#[ORM\HasLifecycleCallbacks]
+/**
+ * @ORM\Entity
+ */
 class ProjectGroup
 {
-    #[ORM\Id]
-    #[ORM\Column(type: "guid", unique: true)]
-    private ?Uuid $id = null;
+    /**
+     * @ORM\Id()
+     * @ORM\GeneratedValue()
+     * @ORM\Column(type="integer")
+     */
+    private $id;
 
-    #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank()
+     * @Assert\Length(min=3, max=255)
+     */
+    private $name;
 
-    #[ORM\Column(type: 'datetime')]
-    private ?\DateTimeInterface $createdAt = null;
-
-    #[ORM\Column(type: 'datetime')]
-    private ?\DateTimeInterface $updatedAt = null;
+    /**
+     * @ORM\OneToMany(targetEntity="Project", mappedBy="projectGroup", cascade={"remove"})
+     */
+    private $projects;
 
     public function __construct()
     {
-        $this->id = Uuid::uuid4();
+        $this->projects = new ArrayCollection();
     }
 
-    public function getId(): ?Uuid
+
+    public function getId(): ?int
     {
         return $this->id;
     }
-
 
     public function getName(): ?string
     {
         return $this->name;
     }
 
-    public function setName(string $name): static
+    public function setName(string $name): self
     {
         $this->name = $name;
 
@@ -70,16 +78,31 @@ class ProjectGroup
         return $this;
     }
 
-    #[ORM\PrePersist]
-    public function prePersist(): void
+
+    /**
+     * @return Collection|Project[]
+     */
+    public function getProjects(): Collection
     {
-        $this->createdAt = new \DateTime();
-        $this->updatedAt = new \DateTime();
+        return $this->projects;
     }
 
-    #[ORM\PreFlush]
-    public function preFlush(): void
+    public function addProject(Project $project): self
     {
-        $this->updatedAt = new \DateTime();
+        if (!$this->projects->contains($project)) {
+            $this->projects[] = $project;
+            $project->setProjectGroup($this);
+        }
+        return $this;
+    }
+
+    public function removeProject(Project $project): self
+    {
+        if ($this->projects->removeElement($project)) {
+            if ($project->getProjectGroup() === $this) {
+                $project->setProjectGroup(null);
+            }
+        }
+        return $this;
     }
 }
