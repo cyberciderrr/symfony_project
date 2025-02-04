@@ -8,20 +8,21 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/tasks')]
 class TaskController extends AbstractController
 {
-    private $serializer;
-    public function __construct(SerializerInterface $serializer, private EntityManagerInterface $entityManager, private ValidatorInterface $validator)
-    {
-        $this->serializer = $serializer;
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private ValidatorInterface $validator
+    ) {
     }
 
     #[Route('', methods: ['POST'])]
-        public function create(Request $request): JsonResponse
+    public function create(Request $request): JsonResponse
     {
         $task = new Task();
         $form = $this->createForm(TaskType::class, $task);
@@ -30,8 +31,7 @@ class TaskController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $task->setProject($this->entityManager->getRepository(Project::class)->find($data['project_id']));
 
-
-        if($form->isSubmitted() && $form->isValid()){
+        if ($form->isSubmitted() && $form->isValid()) {
             $this->entityManager->persist($task);
             $this->entityManager->flush();
             return $this->json(['data' => $task], Response::HTTP_CREATED);
@@ -48,15 +48,15 @@ class TaskController extends AbstractController
         return $this->json(['data' => $errors], Response::HTTP_BAD_REQUEST);
     }
 
-       #[Route('', methods: ['GET'])]
-        public function list(): JsonResponse
-        {
-            $tasks = $this->entityManager->getRepository(Task::class)->findAll();
-            return $this->json(['data' => $tasks]);
-        }
+    #[Route('', methods: ['GET'])]
+    public function list(): JsonResponse
+    {
+        $tasks = $this->entityManager->getRepository(Task::class)->findAll();
+        return $this->json(['data' => $tasks]);
+    }
 
-        #[Route('/{id}', methods: ['GET'])]
-        public function get(int $id): JsonResponse
+    #[Route('/{id}', methods: ['GET'])]
+    public function get(int $id): JsonResponse
     {
         $task = $this->entityManager->getRepository(Task::class)->find($id);
 
@@ -67,9 +67,8 @@ class TaskController extends AbstractController
         return $this->json(['data' => $task]);
     }
 
-
-       #[Route('/{id}', methods: ['PATCH'])]
-        public function update(Request $request, int $id): JsonResponse
+    #[Route('/{id}', methods: ['PATCH'])]
+    public function update(Request $request, int $id): JsonResponse
     {
         $task = $this->entityManager->getRepository(Task::class)->find($id);
 
@@ -79,7 +78,7 @@ class TaskController extends AbstractController
 
         $form = $this->createForm(TaskType::class, $task);
         $form->handleRequest($request);
-        if($form->isSubmitted() && $form->isValid()){
+        if ($form->isSubmitted() && $form->isValid()) {
             $this->entityManager->flush();
             return $this->json(['data' => $task]);
         }
@@ -94,8 +93,8 @@ class TaskController extends AbstractController
         return $this->json(['data' => $errors], Response::HTTP_BAD_REQUEST);
     }
 
-       #[Route('/{id}', methods: ['DELETE'])]
-        public function delete(int $id): JsonResponse
+    #[Route('/{id}', methods: ['DELETE'])]
+    public function delete(int $id): JsonResponse
     {
         $task = $this->entityManager->getRepository(Task::class)->find($id);
 

@@ -11,16 +11,14 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Serializer\SerializerInterface as SymfonySerializerInterface;
 
 #[Route('/api/project_groups')]
 class ProjectGroupController extends AbstractController
 {
-    private SymfonySerializerInterface $serializer;
-
-    public function __construct(SymfonySerializerInterface $serializer, private EntityManagerInterface $entityManager, private ValidatorInterface $validator)
-    {
-        $this->serializer = $serializer;
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private ValidatorInterface $validator
+    ) {
     }
 
     #[Route('', methods: ['POST'])]
