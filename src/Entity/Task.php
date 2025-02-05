@@ -112,4 +112,11 @@ class Task
         $this->project = $project;
         return $this;
     }
+
+    public function setUser(?User $user): static
+    {
+        $this->user = $user;
+
+        return $this;
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\DataFixtures;
 
 use App\Entity\Project;
+
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
@@ -12,8 +13,8 @@ class ProjectFixtures extends Fixture implements DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void
     {
-        $projectGroup1 = $this->getReference('project-group-1');
-        $projectGroup2 = $this->getReference('project-group-2');
+        $projectGroup1 = $this->getReference('project-group-1', ProjectGroup::class);
+        $projectGroup2 = $this->getReference('project-group-2', ProjectGroup::class);
 
         for ($i = 0; $i < 5; $i++) {
             $project = new Project();
