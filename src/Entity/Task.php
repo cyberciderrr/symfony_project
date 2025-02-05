@@ -31,6 +31,10 @@ class Task
     #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?Project $project = null;
 
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'tasks')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $user = null;
+
     public function __construct()
     {
         $this->id = Uuid::uuid4();
@@ -106,6 +110,13 @@ class Task
     public function setProject(?Project $project): static
     {
         $this->project = $project;
+        return $this;
+    }
+
+    public function setUser(?User $user): static
+    {
+        $this->user = $user;
+
         return $this;
     }
 }
