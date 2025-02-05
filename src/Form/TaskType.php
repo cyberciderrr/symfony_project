@@ -1,7 +1,10 @@
 <?php
+
 namespace App\Form;
 
+use App\Entity\Project;
 use App\Entity\Task;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -24,6 +27,11 @@ class TaskType extends AbstractType
                 'constraints' => [
                     new NotBlank(),
                 ],
+            ])
+            ->add('project', EntityType::class, [
+                'class' => Project::class,
+                'choice_label' => 'name',
+                'required' => true,
             ]);
     }
 

@@ -1,76 +1,110 @@
 <?php
+
 namespace App\Controller;
 
 use App\Entity\Task;
 use App\Form\TaskType;
-use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/tasks')]
 class TaskController extends AbstractController
 {
-    #[Route('/', name: 'task_index', methods: ['GET'])]
-    public function index(TaskRepository $repository): JsonResponse
-    {
-        $tasks = $repository->findAll();
-        return $this->json(['data' => $tasks]);
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private ValidatorInterface $validator
+    ) {
     }
 
-    #[Route('/{id}', name: 'task_show', methods: ['GET'])]
-    public function show(Task $task): JsonResponse
-    {
-        return $this->json(['data' => $task]);
-    }
-
-    #[Route('/', name: 'task_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $em): JsonResponse
+    #[Route('', methods: ['POST'])]
+    public function create(Request $request): JsonResponse
     {
         $task = new Task();
         $form = $this->createForm(TaskType::class, $task);
-        $form->submit(json_decode($request->getContent(), true));
+        $form->handleRequest($request);
 
-        if ($form->isValid()) {
-            $em->persist($task);
-            $em->flush();
-            return $this->json(['data' => $task], 201);
+        $data = json_decode($request->getContent(), true);
+        $task->setProject($this->entityManager->getRepository(Project::class)->find($data['project_id']));
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->entityManager->persist($task);
+            $this->entityManager->flush();
+            return $this->json(['data' => $task], Response::HTTP_CREATED);
         }
 
         $errors = [];
-        foreach ($form->getErrors(true) as $error) {
-            $errors[$error->getOrigin()->getName()][] = $error->getMessage();
+        foreach ($form->getErrors(true, true) as $error) {
+            $field = $error->getOrigin()->getName();
+            if (!isset($errors[$field])) {
+                $errors[$field] = [];
+            }
+            $errors[$field][] = $error->getMessage();
         }
-
-        return $this->json(['data' => $errors], 400);
+        return $this->json(['data' => $errors], Response::HTTP_BAD_REQUEST);
     }
 
-    #[Route('/{id}', name: 'task_update', methods: ['PATCH'])]
-    public function update(Task $task, Request $request, EntityManagerInterface $em): JsonResponse
+    #[Route('', methods: ['GET'])]
+    public function list(): JsonResponse
     {
-        $form = $this->createForm(TaskType::class, $task);
-        $form->submit(json_decode($request->getContent(), true), false);
+        $tasks = $this->entityManager->getRepository(Task::class)->findAll();
+        return $this->json(['data' => $tasks]);
+    }
 
-        if ($form->isValid()) {
-            $em->flush();
+    #[Route('/{id}', methods: ['GET'])]
+    public function get(int $id): JsonResponse
+    {
+        $task = $this->entityManager->getRepository(Task::class)->find($id);
+
+        if (!$task) {
+            return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json(['data' => $task]);
+    }
+
+    #[Route('/{id}', methods: ['PATCH'])]
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $task = $this->entityManager->getRepository(Task::class)->find($id);
+
+        if (!$task) {
+            return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $form = $this->createForm(TaskType::class, $task);
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->entityManager->flush();
             return $this->json(['data' => $task]);
         }
-
         $errors = [];
-        foreach ($form->getErrors(true) as $error) {
-            $errors[$error->getOrigin()->getName()][] = $error->getMessage();
+        foreach ($form->getErrors(true, true) as $error) {
+            $field = $error->getOrigin()->getName();
+            if (!isset($errors[$field])) {
+                $errors[$field] = [];
+            }
+            $errors[$field][] = $error->getMessage();
         }
-
-        return $this->json(['data' => $errors], 400);
+        return $this->json(['data' => $errors], Response::HTTP_BAD_REQUEST);
     }
 
-    #[Route('/{id}', name: 'task_delete', methods: ['DELETE'])]
-    public function delete(Task $task, EntityManagerInterface $em): JsonResponse
+    #[Route('/{id}', methods: ['DELETE'])]
+    public function delete(int $id): JsonResponse
     {
-        $em->remove($task);
-        $em->flush();
-        return $this->json([], 204);
+        $task = $this->entityManager->getRepository(Task::class)->find($id);
+
+        if (!$task) {
+            return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $this->entityManager->remove($task);
+        $this->entityManager->flush();
+
+        return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 }

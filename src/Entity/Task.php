@@ -26,17 +26,19 @@ class Task
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $updatedAt = null;
 
+    #[ORM\ManyToOne(inversedBy: 'tasks')]
+    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    private ?Project $project = null;
+
     public function __construct()
     {
         $this->id = Uuid::uuid4();
     }
 
-
     public function getId(): ?Uuid
     {
         return $this->id;
     }
-
 
     public function getName(): ?string
     {
@@ -46,7 +48,6 @@ class Task
     public function setName(string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -58,7 +59,6 @@ class Task
     public function setDescription(string $description): static
     {
         $this->description = $description;
-
         return $this;
     }
 
@@ -70,7 +70,6 @@ class Task
     public function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
-
         return $this;
     }
 
@@ -82,7 +81,6 @@ class Task
     public function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
-
         return $this;
     }
 
@@ -97,5 +95,16 @@ class Task
     public function preFlush(): void
     {
         $this->updatedAt = new \DateTime();
+    }
+
+    public function getProject(): ?Project
+    {
+        return $this->project;
+    }
+
+    public function setProject(?Project $project): static
+    {
+        $this->project = $project;
+        return $this;
     }
 }

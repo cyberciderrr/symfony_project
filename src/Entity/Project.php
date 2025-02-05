@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ProjectRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 
@@ -23,17 +25,23 @@ class Project
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $updatedAt = null;
 
+    #[ORM\ManyToOne(inversedBy: 'projects')]
+    #[ORM\JoinColumn(name: 'project_group_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    private ?ProjectGroup $projectGroup = null;
+
+    #[ORM\OneToMany(mappedBy: 'project', targetEntity: Task::class, orphanRemoval: true)]
+    private Collection $tasks;
+
     public function __construct()
     {
         $this->id = Uuid::uuid4();
+        $this->tasks = new ArrayCollection();
     }
-
 
     public function getId(): ?Uuid
     {
         return $this->id;
     }
-
 
     public function getName(): ?string
     {
@@ -43,7 +51,6 @@ class Project
     public function setName(string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -55,7 +62,6 @@ class Project
     public function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
-
         return $this;
     }
 
@@ -67,7 +73,44 @@ class Project
     public function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+        return $this;
+    }
 
+    public function getProjectGroup(): ?ProjectGroup
+    {
+        return $this->projectGroup;
+    }
+
+    public function setProjectGroup(?ProjectGroup $projectGroup): static
+    {
+        $this->projectGroup = $projectGroup;
+        return $this;
+    }
+
+    /**
+     * @return Collection|Task[]
+     */
+    public function getTasks(): Collection
+    {
+        return $this->tasks;
+    }
+
+    public function addTask(Task $task): static
+    {
+        if (!$this->tasks->contains($task)) {
+            $this->tasks[] = $task;
+            $task->setProject($this);
+        }
+        return $this;
+    }
+
+    public function removeTask(Task $task): static
+    {
+        if ($this->tasks->removeElement($task)) {
+            if ($task->getProject() === $this) {
+                $task->setProject(null);
+            }
+        }
         return $this;
     }
 
