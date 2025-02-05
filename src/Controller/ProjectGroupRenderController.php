@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\ProjectGroup;
-use App\Form\ProjectGroup1Type;
+use App\Form\ProjectGroupType;
 use App\Repository\ProjectGroupRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,7 +26,7 @@ final class ProjectGroupRenderController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $projectGroup = new ProjectGroup();
-        $form = $this->createForm(ProjectGroup1Type::class, $projectGroup);
+        $form = $this->createForm(ProjectGroupType::class, $projectGroup);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -53,7 +53,7 @@ final class ProjectGroupRenderController extends AbstractController
     #[Route('/{id}/edit', name: 'app_project_group_render_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, ProjectGroup $projectGroup, EntityManagerInterface $entityManager): Response
     {
-        $form = $this->createForm(ProjectGroup1Type::class, $projectGroup);
+        $form = $this->createForm(ProjectGroupType::class, $projectGroup);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

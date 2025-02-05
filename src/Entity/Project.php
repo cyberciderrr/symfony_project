@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -16,9 +17,11 @@ class Project
     #[ORM\Id]
     #[ORM\Column(type: "uuid", unique: true)]
     #[ORM\GeneratedValue(strategy: 'NONE')]
+    #[Groups("project:read")]
     private ?UuidInterface $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups("project:read")]
     private ?string $name = null;
 
     #[ORM\Column(type: 'datetime')]
