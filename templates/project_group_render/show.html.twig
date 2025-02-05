@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}ProjectGroup{% endblock %}
+
+{% block body %}
+    <h1>ProjectGroup</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ project_group.id }}</td>
+            </tr>
+            <tr>
+                <th>Name</th>
+                <td>{{ project_group.name }}</td>
+            </tr>
+            <tr>
+                <th>CreatedAt</th>
+                <td>{{ project_group.createdAt ? project_group.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>UpdatedAt</th>
+                <td>{{ project_group.updatedAt ? project_group.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_project_group_render_index') }}">back to list</a>
+
+    <a href="{{ path('app_project_group_render_edit', {'id': project_group.id}) }}">edit</a>
+
+    {{ include('project_group_render/_delete_form.html.twig') }}
+{% endblock %}

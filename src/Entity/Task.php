@@ -5,14 +5,15 @@ namespace App\Entity;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 #[ORM\Entity(repositoryClass: TaskRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 class Task
 {
     #[ORM\Id]
-    #[ORM\Column(type: "guid", unique: true)]
-    private ?Uuid $id = null;
+    #[ORM\Column(type: "uuid", unique: true)]
+    private ?UuidInterface $id = null;
 
     #[ORM\Column(length: 255)]
     private ?string $name = null;
@@ -35,7 +36,7 @@ class Task
         $this->id = Uuid::uuid4();
     }
 
-    public function getId(): ?Uuid
+    public function getId(): ?UuidInterface
     {
         return $this->id;
     }

@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New ProjectGroup{% endblock %}
+
+{% block body %}
+    <h1>Create new ProjectGroup</h1>
+
+    {{ include('project_group_render/_form.html.twig') }}
+
+    <a href="{{ path('app_project_group_render_index') }}">back to list</a>
+{% endblock %}
