@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit ProjectGroup{% endblock %}
+
+{% block body %}
+    <h1>Edit ProjectGroup</h1>
+
+    {{ include('project_group_render/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_project_group_render_index') }}">back to list</a>
+
+    {{ include('project_group_render/_delete_form.html.twig') }}
+{% endblock %}

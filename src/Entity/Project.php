@@ -7,14 +7,16 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 class Project
 {
     #[ORM\Id]
-    #[ORM\Column(type: "guid", unique: true)]
-    private ?Uuid $id = null;
+    #[ORM\Column(type: "uuid", unique: true)]
+    #[ORM\GeneratedValue(strategy: 'NONE')]
+    private ?UuidInterface $id = null;
 
     #[ORM\Column(length: 255)]
     private ?string $name = null;
@@ -38,7 +40,7 @@ class Project
         $this->tasks = new ArrayCollection();
     }
 
-    public function getId(): ?Uuid
+    public function getId(): ?UuidInterface
     {
         return $this->id;
     }
